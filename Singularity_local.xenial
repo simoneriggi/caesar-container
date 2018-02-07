@@ -20,8 +20,10 @@ From: /home/riggi/Analysis/SingularityProjects/caesar_base/caesar_base.simg
 		- skymodel: Generate a skymodel FITS map
 		- simulation: Generate a skymodel FITS map and simulate an observation with CASA	
 		- imaging: Perform imaging of visibility data (e.g. simulated vis) with CASA
+		- convolver: Perform skymodel map & sources convolution with beam
 		- simulationsub: Prepare simulation (skymodel+sim obs) submission script and submit it
 		- imagingsub: Prepare an imaging submission script and submit it
+		- convolversub: Prepare a skymodel convolution script and submit it
 		- makefilelist: Search files/directories according to filter and dump names to list
 		- jobkiller: Kill jobs submitted in batch system listed in input filelist
 		
@@ -46,7 +48,11 @@ From: /home/riggi/Analysis/SingularityProjects/caesar_base/caesar_base.simg
 
 	#################################
 	###    INSTALL MISSING MODULES
-	#################################
+	#################################	
+	# Update system
+	apt-get update
+
+	# Install lsb
 	apt-get -y install lsb-core
 
 	#################################
@@ -70,6 +76,12 @@ From: /home/riggi/Analysis/SingularityProjects/caesar_base/caesar_base.simg
 	##export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib
 	##echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib' >> "$SOFT_SETVARS_FILE"
 	##echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $SINGULARITY_ENVIRONMENT	
+
+	#################################
+	###    ADD BIND DIRECTORY
+	#################################
+	echo "Creating bind directory point..."
+	mkdir -p /bind
 
 	#################################
 	###    CAESAR
@@ -184,11 +196,17 @@ From: /home/riggi/Analysis/SingularityProjects/caesar_base/caesar_base.simg
 %apprun imaging
 	exec casa --nologger --log2term --nogui -c /opt/Software/CAESAR/trunk/scripts/imaging_observation.py "$@"
 
+%apprun convolver
+	exec SkyModelConvolver "$@"
+
 %apprun simulationsub
 	exec /opt/Software/CAESAR/trunk/scripts/RunCASASimulation.sh "$@"
 
 %apprun imagingsub
 	exec /opt/Software/CAESAR/trunk/scripts/RunCASAImaging.sh "$@"
+
+%apprun convolversub
+	exec /opt/Software/CAESAR/trunk/scripts/RunSkyModelConvolver.sh "$@"
 
 %apprun makefilelist
 	exec /opt/Software/CAESAR/trunk/scripts/MakeFileList.sh "$@"
